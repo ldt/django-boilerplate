@@ -5,7 +5,12 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import User
-from .serializers import LoginSerializer, TokenResponseSerializer, UserRegistrationSerializer, UserSerializer
+from .serializers import (
+    LoginSerializer,
+    TokenResponseSerializer,
+    UserRegistrationSerializer,
+    UserSerializer,
+)
 
 
 class RegisterView(generics.CreateAPIView):
@@ -25,7 +30,8 @@ class RegisterView(generics.CreateAPIView):
         description="Register a new user account with email and password",
         responses={
             201: OpenApiResponse(
-                response=TokenResponseSerializer, description="User successfully registered"
+                response=TokenResponseSerializer,
+                description="User successfully registered",
             ),
             400: OpenApiResponse(description="Validation error"),
         },
@@ -63,7 +69,9 @@ class LoginView(generics.GenericAPIView):
         summary="User login",
         description="Login with email and password to get JWT tokens",
         responses={
-            200: OpenApiResponse(response=TokenResponseSerializer, description="Login successful"),
+            200: OpenApiResponse(
+                response=TokenResponseSerializer, description="Login successful"
+            ),
             400: OpenApiResponse(description="Invalid credentials"),
         },
     )
@@ -98,7 +106,10 @@ class ProfileView(generics.RetrieveUpdateAPIView):
         summary="Get user profile",
         description="Retrieve the authenticated user profile",
         responses={
-            200: OpenApiResponse(response=UserSerializer, description="User profile retrieved successfully"),
+            200: OpenApiResponse(
+                response=UserSerializer,
+                description="User profile retrieved successfully",
+            ),
             401: OpenApiResponse(description="Authentication required"),
         },
     )
@@ -110,7 +121,9 @@ class ProfileView(generics.RetrieveUpdateAPIView):
         summary="Update user profile",
         description="Update the authenticated user profile",
         responses={
-            200: OpenApiResponse(response=UserSerializer, description="User profile updated successfully"),
+            200: OpenApiResponse(
+                response=UserSerializer, description="User profile updated successfully"
+            ),
             401: OpenApiResponse(description="Authentication required"),
         },
     )
@@ -122,7 +135,9 @@ class ProfileView(generics.RetrieveUpdateAPIView):
         summary="Partially update user profile",
         description="Partially update the authenticated user profile",
         responses={
-            200: OpenApiResponse(response=UserSerializer, description="User profile updated successfully"),
+            200: OpenApiResponse(
+                response=UserSerializer, description="User profile updated successfully"
+            ),
             401: OpenApiResponse(description="Authentication required"),
         },
     )

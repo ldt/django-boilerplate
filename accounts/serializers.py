@@ -29,11 +29,20 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         validators=[validate_password],
         help_text="Password must be at least 8 characters long",
     )
-    password_confirm = serializers.CharField(write_only=True, help_text="Confirm your password")
+    password_confirm = serializers.CharField(
+        write_only=True, help_text="Confirm your password"
+    )
 
     class Meta:
         model = User
-        fields = ("email", "username", "first_name", "last_name", "password", "password_confirm")
+        fields = (
+            "email",
+            "username",
+            "first_name",
+            "last_name",
+            "password",
+            "password_confirm",
+        )
 
     def validate(self, attrs):
         if attrs["password"] != attrs["password_confirm"]:
@@ -49,7 +58,15 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ("id", "email", "username", "first_name", "last_name", "is_verified", "created_at")
+        fields = (
+            "id",
+            "email",
+            "username",
+            "first_name",
+            "last_name",
+            "is_verified",
+            "created_at",
+        )
         read_only_fields = ("id", "created_at", "is_verified")
 
 
