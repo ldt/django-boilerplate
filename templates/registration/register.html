@@ -1,0 +1,378 @@
+{% extends 'base.html' %}
+
+{% block title %}Register - {{ block.super }}{% endblock %}
+
+{% block extra_head %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    const usernameInput = document.getElementById('id_username');
+    const emailInput = document.getElementById('id_email');
+    const password1Input = document.getElementById('id_password1');
+    const password2Input = document.getElementById('id_password2');
+    const termsCheckbox = document.getElementById('terms');
+    
+    // Minimum password length (matching Django's default)
+    const MIN_PASSWORD_LENGTH = 8;
+    
+    // Username validation (matches Django's User model)
+    function validateUsername(username) {
+        if (!username) return 'Username is required';
+        if (username.length > 150) return 'Username cannot be longer than 150 characters';
+        return '';
+    }
+    
+    // Email validation
+    function validateEmail(email) {
+        if (!email) return 'Email is required';
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) return 'Enter a valid email address';
+        return '';
+    }
+    
+    // Password validation (matches Django's default password validators)
+    function validatePassword(password) {
+        if (!password) return 'Password is required';
+        if (password.length < MIN_PASSWORD_LENGTH) return `Password must be at least ${MIN_PASSWORD_LENGTH} characters long`;
+        if (password.toLowerCase().includes('password')) return 'Password cannot contain the word "password"';
+        if (password === password.toLowerCase()) return 'Password must contain at least one uppercase letter';
+        if (!/[0-9]/.test(password)) return 'Password must contain at least one number';
+        return '';
+    }
+    
+    // Password confirmation validation
+    function validatePasswordConfirmation(password, confirmation) {
+        if (password !== confirmation) return 'The two password fields didn\'t match';
+        return '';
+    }
+    
+    // Terms validation
+    function validateTerms(checked) {
+        if (!checked) return 'You must accept the terms and conditions';
+        return '';
+    }
+    
+    // Show error message
+    function showError(input, message) {
+        let errorDiv = input.nextElementSibling;
+        if (!errorDiv || !errorDiv.classList.contains('error-message')) {
+            errorDiv = document.createElement('div');
+            errorDiv.className = 'text-red-500 text-sm mt-1 error-message';
+            input.parentNode.insertBefore(errorDiv, input.nextSibling);
+        }
+        errorDiv.textContent = message;
+        input.classList.add('border-red-500');
+        input.classList.remove('border-gray-300');
+    }
+    
+    // Clear error message
+    function clearError(input) {
+        const errorDiv = input.nextElementSibling;
+        if (errorDiv && errorDiv.classList.contains('error-message')) {
+            errorDiv.remove();
+        }
+        input.classList.remove('border-red-500');
+        input.classList.add('border-gray-300');
+    }
+    
+    // Validate all fields
+    function validateAll() {
+        let isValid = true;
+        
+        // Username validation
+        const usernameError = validateUsername(usernameInput.value);
+        if (usernameError) {
+            showError(usernameInput, usernameError);
+            isValid = false;
+        } else {
+            clearError(usernameInput);
+        }
+        
+        // Email validation
+        const emailError = validateEmail(emailInput.value);
+        if (emailError) {
+            showError(emailInput, emailError);
+            isValid = false;
+        } else {
+            clearError(emailInput);
+        }
+        
+        // Password validation
+        const passwordError = validatePassword(password1Input.value);
+        if (passwordError) {
+            showError(password1Input, passwordError);
+            isValid = false;
+        } else {
+            clearError(password1Input);
+        }
+        
+        // Password confirmation
+        const passwordConfirmError = validatePasswordConfirmation(
+            password1Input.value, 
+            password2Input.value
+        );
+        if (passwordConfirmError) {
+            showError(password2Input, passwordConfirmError);
+            isValid = false;
+        } else {
+            clearError(password2Input);
+        }
+        
+        // Terms validation
+        const termsError = validateTerms(termsCheckbox.checked);
+        if (termsError) {
+            const termsLabel = termsCheckbox.nextElementSibling;
+            showError(termsCheckbox, termsError);
+            isValid = false;
+        } else {
+            clearError(termsCheckbox);
+        }
+        
+        return isValid;
+    }
+    
+    // Real-time validation on blur
+    usernameInput.addEventListener('blur', () => {
+        const error = validateUsername(usernameInput.value);
+        if (error) {
+            showError(usernameInput, error);
+        } else {
+            clearError(usernameInput);
+        }
+    });
+    
+    emailInput.addEventListener('blur', () => {
+        const error = validateEmail(emailInput.value);
+        if (error) {
+            showError(emailInput, error);
+        } else {
+            clearError(emailInput);
+        }
+    });
+    
+    password1Input.addEventListener('input', () => {
+        const error = validatePassword(password1Input.value);
+        if (error) {
+            showError(password1Input, error);
+        } else {
+            clearError(password1Input);
+        }
+        
+        // Also validate password confirmation when password1 changes
+        if (password2Input.value) {
+            const confirmError = validatePasswordConfirmation(
+                password1Input.value, 
+                password2Input.value
+            );
+            if (confirmError) {
+                showError(password2Input, confirmError);
+            } else {
+                clearError(password2Input);
+            }
+        }
+    });
+    
+    password2Input.addEventListener('blur', () => {
+        const error = validatePasswordConfirmation(
+            password1Input.value, 
+            password2Input.value
+        );
+        if (error) {
+            showError(password2Input, error);
+        } else {
+            clearError(password2Input);
+        }
+    });
+    
+    termsCheckbox.addEventListener('change', () => {
+        const error = validateTerms(termsCheckbox.checked);
+        if (error) {
+            showError(termsCheckbox, error);
+        } else {
+            clearError(termsCheckbox);
+        }
+    });
+    
+    // Form submission
+    form.addEventListener('submit', function(event) {
+        if (!validateAll()) {
+            event.preventDefault();
+            // Focus on first error
+            const firstError = form.querySelector('.border-red-500');
+            if (firstError) firstError.focus();
+        }
+    });
+    
+    // Clear validation errors when user starts typing
+    [usernameInput, emailInput, password1Input, password2Input].forEach(input => {
+        input.addEventListener('input', () => {
+            if (input.value) {
+                clearError(input);
+            }
+        });
+    });
+});
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-full flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div class="sm:mx-auto sm:w-full sm:max-w-md">
+        <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            Create your account
+        </h2>
+        <p class="mt-2 text-center text-sm text-gray-600">
+            Or
+            <a href="{% url 'login' %}" class="font-medium text-blue-600 hover:text-blue-500">
+                sign in to your existing account
+            </a>
+        </p>
+    </div>
+
+    <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div class="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+            <form id="register-form" hx-post="{% url 'register' %}" hx-target="#form-messages" hx-swap="innerHTML" novalidate
+                class="space-y-6">
+                {% csrf_token %}
+
+                <div id="form-messages">
+                    <!-- Server messages will appear here -->
+                    {% if form.non_field_errors %}
+                    <div class="mb-4 p-4 bg-red-50 text-red-700 rounded-md">
+                        {% for error in form.non_field_errors %}
+                        <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label for="id_username" class="block text-sm font-medium text-gray-700">
+                        Username
+                    </label>
+                    <div class="mt-1">
+                        <input id="id_username" name="username" type="text" required
+                            class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                            value="{{ form.username.value|default:'' }}"
+                            autocomplete="username"
+                        >
+                        {% if form.username.errors %}
+                        <div class="text-red-500 text-sm mt-1">{{ form.username.errors.0 }}</div>
+                        {% endif %}
+                        <p class="mt-1 text-xs text-gray-500">Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.</p>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="id_email" class="block text-sm font-medium text-gray-700">
+                        Email address
+                    </label>
+                    <div class="mt-1">
+                        <input id="id_email" name="email" type="email" required
+                            class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                            value="{{ form.email.value|default:'' }}"
+                            autocomplete="email"
+                        >
+                        {% if form.email.errors %}
+                        <div class="text-red-500 text-sm mt-1">{{ form.email.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div>
+                    <label for="id_password1" class="block text-sm font-medium text-gray-700">
+                        Password
+                    </label>
+                    <div class="mt-1">
+                        <input id="id_password1" name="password1" type="password" required
+                            class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                            autocomplete="new-password"
+                        >
+                        {% if form.password1.errors %}
+                        <div class="text-red-500 text-sm mt-1">{{ form.password1.errors.0 }}</div>
+                        {% endif %}
+                        <div class="mt-1 text-xs text-gray-500">
+                            <ul class="list-disc pl-5 space-y-1">
+                                <li>Your password must be at least 8 characters long.</li>
+                                <li>Your password can't be entirely numeric.</li>
+                                <li>Your password can't be too common.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="id_password2" class="block text-sm font-medium text-gray-700">
+                        Confirm Password
+                    </label>
+                    <div class="mt-1">
+                        <input id="id_password2" name="password2" type="password" required
+                            class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                            autocomplete="new-password"
+                        >
+                        {% if form.password2.errors %}
+                        <div class="text-red-500 text-sm mt-1">{{ form.password2.errors.0 }}</div>
+                        {% endif %}
+                        <p class="mt-1 text-xs text-gray-500">Enter the same password as before, for verification.</p>
+                    </div>
+                </div>
+
+                <div class="flex items-start">
+                    <div class="flex items-center h-5">
+                        <input 
+                            id="terms" 
+                            name="terms" 
+                            type="checkbox" 
+                            required
+                            class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                            {% if form.terms.value %}checked{% endif %}
+                        >
+                    </div>
+                    <div class="ml-3 text-sm">
+                        <label for="terms" class="font-medium text-gray-700">
+                            I agree to the Terms and Conditions and Privacy Policy
+                        </label>
+                        {% if form.terms.errors %}
+                        <div class="text-red-500 text-sm mt-1">{{ form.terms.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div>
+                    <button type="submit"
+                        class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Create Account
+                    </button>
+                </div>
+            </form>
+
+            <!-- Social authentication removed as it's not implemented yet -->
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    // Add loading state to form
+    document.getElementById('register-form').addEventListener('htmx:beforeSend', function (evt) {
+        const button = this.querySelector('button[type="submit"]');
+        button.disabled = true;
+        button.innerHTML = 'Creating Account...';
+    });
+
+    // Handle successful form submission
+    document.body.addEventListener('htmx:afterRequest', function (evt) {
+        if (evt.detail.successful && evt.detail.requestConfig.elt.id === 'register-form') {
+            const form = document.getElementById('register-form');
+            const button = form.querySelector('button[type="submit"]');
+            button.innerHTML = 'Account Created! Redirecting...';
+
+            // Redirect to login page after a short delay
+            setTimeout(function () {
+                window.location.href = "{% url 'login' %}";
+            }, 1500);
+        }
+    });
+</script>
+{% endblock %}
+{% endblock %}

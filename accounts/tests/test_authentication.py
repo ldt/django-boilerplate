@@ -15,7 +15,8 @@ class TestAuthentication:
         self.client = APIClient()
 
     def test_user_registration(self):
-        url = reverse("register")
+        """Test user registration through the API"""
+        url = "/api/register/"
         data = {
             "email": "test@example.com",
             "username": "testuser",
@@ -24,32 +25,39 @@ class TestAuthentication:
             "password": "testpassword123",
             "password_confirm": "testpassword123",
         }
-        response = self.client.post(url, data)
+        response = self.client.post(url, data, format='json')
 
-        assert response.status_code == status.HTTP_201_CREATED
-        assert "access" in response.data
-        assert "refresh" in response.data
-        assert User.objects.filter(email="test@example.com").exists()
+        assert response.status_code == status.HTTP_201_CREATED, \
+            f"Expected 201 CREATED, got {response.status_code}. Response: {response.data}"
+        assert "access" in response.data, "Access token not in response"
+        assert "refresh" in response.data, "Refresh token not in response"
+        assert User.objects.filter(email="test@example.com").exists(), "User was not created"
 
     def test_user_login(self):
+        """Test user login through the API"""
+        # Create a test user
         user = UserFactory(email="test@example.com")
         user.set_password("testpassword123")
         user.save()
 
-        url = reverse("login")
+        url = "/api/login/"
         data = {"email": "test@example.com", "password": "testpassword123"}
-        response = self.client.post(url, data)
+        response = self.client.post(url, data, format='json')
 
-        assert response.status_code == status.HTTP_200_OK
-        assert "access" in response.data
-        assert "refresh" in response.data
+        assert response.status_code == status.HTTP_200_OK, \
+            f"Expected 200 OK, got {response.status_code}. Response: {response.data}"
+        assert "access" in response.data, "Access token not in response"
+        assert "refresh" in response.data, "Refresh token not in response"
 
     def test_user_login_invalid_credentials(self):
-        url = reverse("login")
+        """Test login with invalid credentials through the API"""
+        url = "/api/login/"
         data = {"email": "nonexistent@example.com", "password": "wrongpassword"}
-        response = self.client.post(url, data)
+        response = self.client.post(url, data, format='json')
 
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert response.status_code == status.HTTP_400_BAD_REQUEST, \
+            f"Expected 400 BAD REQUEST, got {response.status_code}. Response: {response.data}"
+        assert "non_field_errors" in response.data, "Error details not in response"
 
     def test_profile_access_authenticated(self):
         user = UserFactory()

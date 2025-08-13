@@ -1,3 +1,4 @@
+from django import forms
 from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from drf_spectacular.utils import OpenApiExample, extend_schema_serializer
@@ -81,20 +82,81 @@ class UserSerializer(serializers.ModelSerializer):
     ]
 )
 class LoginSerializer(serializers.Serializer):
-    email = serializers.EmailField(help_text="User's email address")
-    password = serializers.CharField(help_text="User's password")
+    """
+    Serializer for user authentication.
+    Handles both HTML form and API authentication.
+    """
+    email = serializers.EmailField(
+        help_text="User's email address",
+        error_messages={
+            'required': 'Email is required',
+            'invalid': 'Enter a valid email address',
+        }
+    )
+    password = serializers.CharField(
+        write_only=True,
+        help_text="User's password",
+        error_messages={
+            'required': 'Password is required',
+        }
+    )
+    remember_me = serializers.BooleanField(required=False, default=False)
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Make fields accessible for form rendering in templates
+        self.fields['email'].widget = forms.EmailInput(attrs={
+            'class': 'appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm',
+            'placeholder': 'you@example.com',
+            'autocomplete': 'email',
+        })
+        self.fields['password'].widget = forms.PasswordInput(attrs={
+            'class': 'appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm',
+            'placeholder': '••••••••',
+            'autocomplete': 'current-password',
+        })
 
     def validate(self, attrs):
         email = attrs.get("email")
         password = attrs.get("password")
-
-        if email and password:
-            user = authenticate(username=email, password=password)
-            if not user:
-                raise serializers.ValidationError("Invalid credentials")
-            if not user.is_active:
-                raise serializers.ValidationError("User account is disabled")
-
+        request = self.context.get("request")
+        
+        if not email:
+            raise serializers.ValidationError(
+                {'email': 'Email is required'},
+                code='required'
+            )
+            
+        if not password:
+            raise serializers.ValidationError(
+                {'password': 'Password is required'},
+                code='required'
+            )
+        
+        user = authenticate(
+            request=request,
+            username=email,
+            password=password
+        )
+        
+        if not user:
+            raise serializers.ValidationError(
+                {'non_field_errors': ['Unable to log in with provided credentials.']},
+                code='authorization'
+            )
+        
+        if not user.is_active:
+            raise serializers.ValidationError(
+                {'non_field_errors': ['This account is inactive.']},
+                code='inactive'
+            )
+            
+        # Set session expiry based on remember_me
+        if request and request.accepts('text/html'):
+            if not attrs.get('remember_me'):
+                # Session will expire when the user closes the browser
+                request.session.set_expiry(0)
+        
         attrs["user"] = user
         return attrs
 
