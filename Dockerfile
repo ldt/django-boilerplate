@@ -26,7 +26,7 @@ RUN uv sync --no-dev
 COPY . .
 
 # Collect static files
-RUN python manage.py collectstatic --noinput
+RUN uv run manage.py collectstatic --noinput
 
 # Expose port
 EXPOSE 8000

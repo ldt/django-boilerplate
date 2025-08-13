@@ -15,7 +15,7 @@ def base_url():
     return "http://localhost:8001"
 
 @pytest.fixture
-def test_user(db):
+def test_user(django_db_setup, db):
     """Create a test user for authentication tests"""
     user = User.objects.create_user(
         username="testuser",
