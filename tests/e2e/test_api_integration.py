@@ -25,8 +25,6 @@ class TestAPIIntegration:
         # Fill and submit form
         page.fill('input[name="email"]', "apitest@example.com")
         page.fill('input[name="username"]', "apitest")
-        page.fill('input[name="first_name"]', "API")
-        page.fill('input[name="last_name"]', "Test")
         page.fill('input[name="password1"]', "APITestPass123!")
         page.fill('input[name="password2"]', "APITestPass123!")
         

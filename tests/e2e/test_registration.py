@@ -7,11 +7,9 @@ User = get_user_model()
 class TestRegistration:
     """E2E tests for user registration flow"""
     
-    BASE_URL = "http://localhost:8001"
-    
-    def test_registration_page_loads(self, page: Page):
+    def test_registration_page_loads(self, page: Page, base_url: str):
         """Test that the registration page loads correctly"""
-        page.goto(f"{self.BASE_URL}/register/")
+        page.goto(f"{base_url}/register/")
         
         # Check page title and heading
         expect(page).to_have_title("Register - Django Boilerplate")
@@ -24,9 +22,9 @@ class TestRegistration:
         expect(page.locator('input[name="password2"]')).to_be_visible()
         expect(page.locator('button[type="submit"]')).to_be_visible()
     
-    def test_successful_registration(self, page: Page):
+    def test_successful_registration(self, page: Page, base_url: str):
         """Test successful user registration"""
-        page.goto(f"{self.BASE_URL}/register/")
+        page.goto(f"{base_url}/register/")
         
         # Fill out the registration form
         page.fill('input[name="email"]', "newuser@example.com")
@@ -48,15 +46,15 @@ class TestRegistration:
         assert user.first_name == "New"
         assert user.last_name == "User"
     
-    def test_registration_validation_errors(self, page: Page):
+    def test_registration_validation_errors(self, page: Page, base_url: str):
         """Test form validation errors"""
-        page.goto(f"{self.BASE_URL}/register/")
+        page.goto(f"{base_url}/register/")
         
         # Try to submit empty form
         page.click('button[type="submit"]')
         
         # Should stay on registration page and show validation errors
-        expect(page).to_have_url(f"{self.BASE_URL}/register/")
+        expect(page).to_have_url(f"{base_url}/register/")
         expect(page.locator(".error, .alert-danger, .text-red-600")).to_be_visible()
     
     def test_password_mismatch_validation(self, page: Page, base_url: str):
@@ -66,8 +64,6 @@ class TestRegistration:
         # Fill form with mismatched passwords
         page.fill('input[name="email"]', "test@example.com")
         page.fill('input[name="username"]', "testuser")
-        page.fill('input[name="first_name"]', "Test")
-        page.fill('input[name="last_name"]', "User")
         page.fill('input[name="password1"]', "StrongPass123!")
         page.fill('input[name="password2"]', "DifferentPass123!")
         
@@ -83,8 +79,6 @@ class TestRegistration:
         # Try to register with existing user's email
         page.fill('input[name="email"]', test_user.email)
         page.fill('input[name="username"]', "differentuser")
-        page.fill('input[name="first_name"]', "Different")
-        page.fill('input[name="last_name"]', "User")
         page.fill('input[name="password1"]', "StrongPass123!")
         page.fill('input[name="password2"]', "StrongPass123!")
         
@@ -100,8 +94,6 @@ class TestRegistration:
         # Try to register with existing user's username
         page.fill('input[name="email"]', "different@example.com")
         page.fill('input[name="username"]', test_user.username)
-        page.fill('input[name="first_name"]', "Different")
-        page.fill('input[name="last_name"]', "User")
         page.fill('input[name="password1"]', "StrongPass123!")
         page.fill('input[name="password2"]', "StrongPass123!")
         

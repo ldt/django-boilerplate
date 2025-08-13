@@ -7,11 +7,9 @@ User = get_user_model()
 class TestLogin:
     """E2E tests for user login flow"""
     
-    BASE_URL = "http://localhost:8001"
-    
-    def test_login_page_loads(self, page: Page):
+    def test_login_page_loads(self, page: Page, base_url: str):
         """Test that the login page loads correctly"""
-        page.goto(f"{self.BASE_URL}/login/")
+        page.goto(f"{base_url}/login/")
         
         # Check page title and heading  
         expect(page).to_have_title("Login")
