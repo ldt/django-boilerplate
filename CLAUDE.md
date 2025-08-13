@@ -11,10 +11,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Development server**: `python manage.py runserver`
 
 ### Testing & Code Quality
-- **Run tests**: `uv run pytest` or `pytest`
+- **Run unit tests**: `uv run pytest` or `pytest`
+- **Run E2E tests**: `uv run pytest -c pytest-e2e.ini tests/e2e/`
+- **Install Playwright browsers**: `uv run playwright install`
 - **Code formatting & linting**: `uvx ruff check`
 - **Single test file**: `pytest accounts/tests/test_authentication.py`
 - **Test with verbose output**: `pytest -v`
+- **E2E tests (headless)**: `pytest tests/e2e/ --headed=false`
+- **E2E tests (headed)**: `pytest tests/e2e/ --headed=true`
 
 ### Django Management
 - **Create migrations**: `python manage.py makemigrations`
@@ -36,7 +40,8 @@ This is a Django REST API boilerplate with JWT authentication using a modular se
 - **JWT Authentication** via djangorestframework-simplejwt
 - **Custom User Model** (email as username field, located in accounts/models.py)
 - **uv** for dependency management
-- **pytest** with factory-boy for testing
+- **pytest** with factory-boy for unit testing
+- **Playwright** with pytest-playwright for E2E testing
 - **drf-spectacular** for API documentation
 - **CORS headers** configured for frontend integration
 
@@ -73,10 +78,14 @@ The `User` model extends `AbstractUser` with:
 - Property: `full_name` combining first and last names
 
 ### Testing Approach
-- Uses pytest-django with reusable database
-- Factory-boy for test data generation
-- Test files in `accounts/tests/` directory
-- Configured for both unit and integration testing
+- **Unit Tests**: Uses pytest-django with reusable database
+- **Factory-boy**: For test data generation in `accounts/tests/factories.py`
+- **E2E Tests**: Playwright-based tests in `tests/e2e/` directory
+- **Test Structure**: 
+  - `accounts/tests/` - Unit and integration tests
+  - `tests/e2e/` - End-to-end browser tests
+  - `tests/e2e/conftest.py` - E2E test fixtures and setup
+- **E2E Test Coverage**: Registration, login, authenticated flows, API integration
 
 ### Environment Variables
 Key variables (via .env file):

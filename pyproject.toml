@@ -21,6 +21,9 @@ dev = [
     "factory-boy>=3.3.3",
     "flake8>=7.3.0",
     "isort>=6.0.1",
+    "playwright>=1.54.0",
     "pytest>=8.4.1",
     "pytest-django>=4.11.1",
+    "pytest-playwright>=0.7.0",
+    "requests>=2.32.4",
 ]
