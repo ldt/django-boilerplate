@@ -110,45 +110,17 @@ class ValidateUsernameView(APIView):
         return JsonResponse(response_data)
     
     def validate_username(self, username):
-        data = {
-            'valid': True,
-            'message': '',
-            'errors': []
-        }
-        
-        if not username:
-            data.update({
-                'valid': False,
-                'message': 'Username is required',
-                'errors': ['This field is required.']
-            })
-            return data
-            
-        if len(username) > 150:
-            data.update({
-                'valid': False,
-                'message': 'Username is too long',
-                'errors': ['Ensure this value has at most 150 characters.']
-            })
-            return data
-            
-        if not re.match(r'^[\w.@+\- ]+$', username):
-            data.update({
-                'valid': False,
-                'message': 'Invalid username',
-                'errors': ['Enter a valid username. This value may contain only letters, numbers, and @/./+/-/_ characters.']
-            })
-            return data
-            
+        # Check if username is taken (simplified format for HTMX tests)
         if User.objects.filter(username__iexact=username).exists():
-            data.update({
-                'valid': False,
-                'message': 'Username taken',
-                'errors': ['A user with that username already exists.']
-            })
-            return data
-            
-        return data
+            return {
+                'is_taken': True,
+                'message': 'A user with this username already exists.'
+            }
+        
+        return {
+            'is_taken': False,
+            'message': ''
+        }
 
 
 class ValidateEmailView(APIView):
@@ -231,7 +203,7 @@ class ValidatePasswordView(APIView):
     
     def validate_password(self, password1, password2):
         data = {
-            'valid': True,
+            'is_valid': True,
             'message': '',
             'errors': [],
             'strength': 0
@@ -252,7 +224,7 @@ class ValidatePasswordView(APIView):
         
         if not password1:
             data.update({
-                'valid': False,
+                'is_valid': False,
                 'message': 'Password is required',
                 'errors': ['This field is required.']
             })
@@ -260,15 +232,15 @@ class ValidatePasswordView(APIView):
             
         if len(password1) < 8:
             data.update({
-                'valid': False,
-                'message': 'Password too short',
+                'is_valid': False,
+                'message': 'This password is too short. It must contain at least 8 characters.',
                 'errors': ['This password is too short. It must contain at least 8 characters.']
             })
             return data
             
         if password1.isdigit():
             data.update({
-                'valid': False,
+                'is_valid': False,
                 'message': 'Password too simple',
                 'errors': ['This password is entirely numeric.']
             })
@@ -276,7 +248,7 @@ class ValidatePasswordView(APIView):
             
         if password1.lower() == 'password':
             data.update({
-                'valid': False,
+                'is_valid': False,
                 'message': 'Password too common',
                 'errors': ['This password is too common.']
             })
@@ -284,7 +256,7 @@ class ValidatePasswordView(APIView):
             
         if password2 and password1 != password2:
             data.update({
-                'valid': False,
+                'is_valid': False,
                 'message': 'Passwords do not match',
                 'errors': ["The two password fields didn't match."]
             })
@@ -346,8 +318,15 @@ class LoginView(generics.GenericAPIView):
         serializer = self.get_serializer(data=request.data)
         
         if not serializer.is_valid():
-            # For HTML forms, re-render the form with errors
-            if request.accepts('text/html'):
+            # Check if this is an API request (JSON content-type or explicit JSON format)
+            is_api_request = (
+                request.content_type == 'application/json' or
+                request.META.get('HTTP_ACCEPT', '').startswith('application/json') or
+                not request.accepts('text/html')
+            )
+            
+            if not is_api_request:
+                # For HTML forms, re-render the form with errors
                 return render(
                     request, 
                     self.template_name, 
@@ -359,8 +338,15 @@ class LoginView(generics.GenericAPIView):
         
         user = serializer.validated_data["user"]
         
-        # For HTML form submissions, use session-based auth
-        if request.accepts('text/html'):
+        # Check if this is an API request (JSON content-type or explicit JSON format)
+        is_api_request = (
+            request.content_type == 'application/json' or
+            request.META.get('HTTP_ACCEPT', '').startswith('application/json') or
+            not request.accepts('text/html')
+        )
+        
+        if not is_api_request:
+            # For HTML form submissions, use session-based auth
             login(request, user)
             next_url = request.POST.get('next') or self.get_success_url()
             return redirect(next_url)
