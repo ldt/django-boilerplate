@@ -14,14 +14,15 @@ def base_url():
     """Provide base URL for E2E tests"""
     return "http://localhost:8001"
 
-@pytest.fixture
-def test_user(django_db_setup, db):
-    """Create a test user for authentication tests"""
-    user = User.objects.create_user(
-        username="testuser",
-        email="test@example.com",
-        password="testpass123",
-        first_name="Test",
-        last_name="User"
-    )
-    return user
+@pytest.fixture(scope="session")
+def test_user():
+    """Provide test user data for authentication tests"""
+    # For E2E tests, return user data without creating in DB
+    # The actual user will be created via registration API during tests
+    return type('TestUser', (), {
+        'username': 'testuser',
+        'email': 'test@example.com',
+        'password': 'testpass123',
+        'first_name': 'Test',
+        'last_name': 'User'
+    })()

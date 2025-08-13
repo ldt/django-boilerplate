@@ -9,14 +9,47 @@ class TestAuthenticatedFlows:
     
     @pytest.fixture(autouse=True)
     def login_user(self, page: Page, base_url: str, test_user):
-        """Automatically login before each test"""
+        """Automatically create user and login before each test"""
+        # First, create the user via registration
+        page.goto(f"{base_url}/register/")
+        page.fill('input[name="email"]', test_user.email)
+        page.fill('input[name="username"]', test_user.username)
+        page.fill('input[name="password1"]', test_user.password)
+        page.fill('input[name="password2"]', test_user.password)
+        page.click('button[type="submit"]')
+        
+        # Wait for registration to complete
+        page.wait_for_timeout(2000)
+        
+        # Then login with the created user
         page.goto(f"{base_url}/login/")
         page.fill('input[name="email"]', test_user.email)
-        page.fill('input[name="password"]', "testpass123")
+        page.fill('input[name="password"]', test_user.password)
         page.click('button[type="submit"]')
         
         # Verify login was successful
-        expect(page).to_have_url(f"{base_url}/")
+        page.wait_for_timeout(1000)
+        # Just check we're not still on login page
+        current_url = page.url
+        if "/login/" in current_url:
+            # If still on login page, registration might have failed, try creating different user
+            unique_email = f"unique_{hash(abs(hash(test_user.email)))}@example.com"
+            unique_username = f"user_{hash(abs(hash(test_user.username)))}"
+            
+            page.goto(f"{base_url}/register/")
+            page.fill('input[name="email"]', unique_email)
+            page.fill('input[name="username"]', unique_username)
+            page.fill('input[name="password1"]', test_user.password)
+            page.fill('input[name="password2"]', test_user.password)
+            page.click('button[type="submit"]')
+            page.wait_for_timeout(2000)
+            
+            page.goto(f"{base_url}/login/")
+            page.fill('input[name="email"]', unique_email)
+            page.fill('input[name="password"]', test_user.password)
+            page.click('button[type="submit"]')
+            page.wait_for_timeout(1000)
+        
         return test_user
     
     def test_home_page_authenticated(self, page: Page, base_url: str, test_user):

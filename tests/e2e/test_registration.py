@@ -92,11 +92,21 @@ class TestRegistration:
     
     def test_duplicate_email_validation(self, page: Page, base_url: str, test_user):
         """Test that duplicate email addresses are rejected"""
+        # First, create a user via registration
         page.goto(f"{base_url}/register/")
-        
-        # Try to register with existing user's email
         page.fill('input[name="email"]', test_user.email)
-        page.fill('input[name="username"]', "differentuser")
+        page.fill('input[name="username"]', test_user.username)
+        page.fill('input[name="password1"]', test_user.password)
+        page.fill('input[name="password2"]', test_user.password)
+        page.click('button[type="submit"]')
+        
+        # Wait for first registration to complete
+        page.wait_for_timeout(2000)
+        
+        # Now try to register with the same email but different username
+        page.goto(f"{base_url}/register/")
+        page.fill('input[name="email"]', test_user.email)  # Same email
+        page.fill('input[name="username"]', "differentuser")  # Different username
         page.fill('input[name="password1"]', "StrongPass123!")
         page.fill('input[name="password2"]', "StrongPass123!")
         
@@ -108,11 +118,21 @@ class TestRegistration:
     
     def test_duplicate_username_validation(self, page: Page, base_url: str, test_user):
         """Test that duplicate usernames are rejected"""
+        # First, create a user via registration
         page.goto(f"{base_url}/register/")
-        
-        # Try to register with existing user's username
-        page.fill('input[name="email"]', "different@example.com")
+        page.fill('input[name="email"]', test_user.email)
         page.fill('input[name="username"]', test_user.username)
+        page.fill('input[name="password1"]', test_user.password)
+        page.fill('input[name="password2"]', test_user.password)
+        page.click('button[type="submit"]')
+        
+        # Wait for first registration to complete
+        page.wait_for_timeout(2000)
+        
+        # Now try to register with different email but same username
+        page.goto(f"{base_url}/register/")
+        page.fill('input[name="email"]', "different@example.com")  # Different email
+        page.fill('input[name="username"]', test_user.username)  # Same username
         page.fill('input[name="password1"]', "StrongPass123!")
         page.fill('input[name="password2"]', "StrongPass123!")
         
@@ -124,9 +144,21 @@ class TestRegistration:
     
     def test_htmx_username_validation(self, page: Page, base_url: str, test_user):
         """Test real-time username validation via HTMX"""
+        # First, create a user via registration
+        page.goto(f"{base_url}/register/")
+        page.fill('input[name="email"]', test_user.email)
+        page.fill('input[name="username"]', test_user.username)
+        page.fill('input[name="password1"]', test_user.password)
+        page.fill('input[name="password2"]', test_user.password)
+        page.click('button[type="submit"]')
+        
+        # Wait for first registration to complete
+        page.wait_for_timeout(2000)
+        
+        # Now test HTMX validation on a fresh registration page
         page.goto(f"{base_url}/register/")
         
-        # Fill in an existing username
+        # Fill in the existing username to test validation
         page.fill('input[name="username"]', test_user.username)
         page.locator('input[name="username"]').blur()  # Trigger HTMX validation
         
