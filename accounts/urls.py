@@ -10,9 +10,6 @@ from .views import (
     ProfileView, 
     RegisterView,  # HTML form view
     RegisterAPIView,  # API view
-    ValidateUsernameView,
-    ValidateEmailView,
-    ValidatePasswordView,
 )
 
 class LogoutView(RedirectView):
@@ -47,12 +44,5 @@ html_urlpatterns = [
     path("profile/", ProfileView.as_view(), name="profile"),
 ]
 
-# HTMX validation endpoints
-htmx_urlpatterns = [
-    path("validate-username/", ValidateUsernameView.as_view(), name="validate_username"),
-    path("validate-email/", ValidateEmailView.as_view(), name="validate_email"),
-    path("validate-password/", ValidatePasswordView.as_view(), name="validate_password"),
-]
-
 # Combine all URL patterns
-urlpatterns = api_urlpatterns + html_urlpatterns + htmx_urlpatterns
+urlpatterns = api_urlpatterns + html_urlpatterns

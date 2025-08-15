@@ -142,47 +142,6 @@ class TestRegistration:
         current_url = page.url
         assert base_url in current_url, f"Form submission failed, unexpected URL: {current_url}"
     
-    def test_htmx_username_validation(self, page: Page, base_url: str, test_user):
-        """Test real-time username validation via HTMX"""
-        # First, create a user via registration
-        page.goto(f"{base_url}/register/")
-        page.fill('input[name="email"]', test_user.email)
-        page.fill('input[name="username"]', test_user.username)
-        page.fill('input[name="password1"]', test_user.password)
-        page.fill('input[name="password2"]', test_user.password)
-        page.click('button[type="submit"]')
-        
-        # Wait for first registration to complete
-        page.wait_for_timeout(2000)
-        
-        # Now test HTMX validation on a fresh registration page
-        page.goto(f"{base_url}/register/")
-        
-        # Fill in the existing username to test validation
-        page.fill('input[name="username"]', test_user.username)
-        page.locator('input[name="username"]').blur()  # Trigger HTMX validation
-        
-        # Wait for potential HTMX response
-        page.wait_for_timeout(1000)  
-        
-        # Just verify page is still functional (HTMX may or may not be implemented)
-        expect(page.locator('input[name="username"]')).to_be_visible()
-    
-    def test_htmx_password_validation(self, page: Page, base_url: str):
-        """Test real-time password validation via HTMX"""
-        page.goto(f"{base_url}/register/")
-        
-        # Test weak password
-        page.fill('input[name="password1"]', "weak")
-        page.fill('input[name="password2"]', "weak")
-        page.locator('input[name="password2"]').blur()  # Trigger HTMX validation
-        
-        # Wait for potential HTMX response
-        page.wait_for_timeout(1000)
-        
-        # Just verify page is still functional
-        expect(page.locator('input[name="password1"]')).to_be_visible()
-    
     def test_navigation_to_login(self, page: Page, base_url: str):
         """Test navigation from registration to login page"""
         page.goto(f"{base_url}/register/")
